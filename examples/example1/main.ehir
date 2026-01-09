@@ -1,0 +1,13 @@
+struct MS {
+    field1: u16
+}
+
+fn main() -> u16 {
+  $entry:
+    f1 = lcpos 0_u16
+    a = scsoh MS(f1)
+    br $res
+  $res:
+    zero = lcpos 0_u16
+    ret zero
+}
