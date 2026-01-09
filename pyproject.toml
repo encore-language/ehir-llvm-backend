@@ -1,5 +1,5 @@
 [project]
-name = "ehir-llvm-target"
+name = "ehir-llvm-backend"
 version = "0.0.0"
 description = "LLVM Backend for EHIR"
 authors = [
@@ -24,7 +24,7 @@ dev = [
 ehir = { git = "https://github.com/encore-language/ehir.git", branch = "feature/safe_pointers" }
 
 [project.scripts]
-ehir-llvm-target-cli = "ehir_llvm_target.cli:main"
+ehir-llvm-backend-cli = "ehir_llvm_backend.cli:main"
 
 
 [build-system]

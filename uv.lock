@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ehir-llvm-target"
+name = "ehir-llvm-backend"
 version = "0.0.0"
 source = { editable = "." }
 dependencies = [

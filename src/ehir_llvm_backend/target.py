@@ -2,13 +2,13 @@ from pathlib import Path
 
 from ehir.postprocessor import ProcessedModule
 
-from ehir_llvm_target.assembler import Assembler
-from ehir_llvm_target.codegen import Codegen
-from ehir_llvm_target.linker import Linker
-from ehir_llvm_target.optimizer import Optimizer, OptLevel
+from ehir_llvm_backend.assembler import Assembler
+from ehir_llvm_backend.codegen import Codegen
+from ehir_llvm_backend.linker import Linker
+from ehir_llvm_backend.optimizer import Optimizer, OptLevel
 
 
-class EHIR_LLVM_Target:
+class EHIR_LLVM_Backend:
     def __init__(self):
         self._codegen = Codegen()
         self._optimizer = Optimizer()
