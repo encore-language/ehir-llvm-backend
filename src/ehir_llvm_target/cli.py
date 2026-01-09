@@ -21,11 +21,12 @@ def main():
     ehir_raw_mod = compiler.compile(input_file)
 
     target = EHIR_LLVM_Target()
-    obj_path = target.emit_object_file(
+    file_path = target.compile(
         ehir_raw_mod,
-        input_file.parent / f"{input_file.stem}.a",
+        input_file.parent / f"{input_file.stem}.o",
+        input_file.parent / f"{input_file.stem}.out",
     )
-    print(obj_path)
+    print(file_path)
 
 
 if __name__ == "__main__":
