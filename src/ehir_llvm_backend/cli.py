@@ -28,7 +28,7 @@ def main():
     compiler = Compiler()
     ehir_raw_mod = compiler.compile(source_code, name)
 
-    target = EHIR_LLVM_Backend()
+    target = EHIR_LLVM_Backend(input_file.parent)
     file_path = target.compile(
         ehir_raw_mod,
         input_file.parent / f"{input_file.stem}.o",
