@@ -17,10 +17,18 @@ def main():
     if not input_file.is_absolute():
         input_file = Path().resolve() / input_file
 
-    compiler = Compiler()
-    ehir_raw_mod = compiler.compile(input_file)
+    if not input_file.exists():
+        print("Unable to locate this file")
+        exit(1)
 
-    target = EHIR_LLVM_Backend()
+    with input_file.open("r") as f:
+        source_code = f.read()
+        name = input_file.stem
+
+    compiler = Compiler()
+    ehir_raw_mod = compiler.compile(source_code, name)
+
+    target = EHIR_LLVM_Backend(input_file.parent)
     file_path = target.compile(
         ehir_raw_mod,
         input_file.parent / f"{input_file.stem}.o",
