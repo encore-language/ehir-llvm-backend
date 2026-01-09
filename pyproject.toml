@@ -26,7 +26,6 @@ ehir = { git = "https://github.com/encore-language/ehir.git", branch = "feature/
 [project.scripts]
 ehir-llvm-backend-cli = "ehir_llvm_backend.cli:main"
 
-
 [build-system]
 requires = ["uv_build>=0.9.22,<0.10.0"]
 build-backend = "uv_build"
