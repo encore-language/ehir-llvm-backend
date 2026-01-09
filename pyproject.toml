@@ -1,6 +1,6 @@
 [project]
 name = "ehir-llvm-backend"
-version = "0.0.0"
+version = "0.0.1"
 description = "LLVM Backend for EHIR"
 authors = [
     {name = "Maksim Shushkevich", email = "m.e.shushkevich@yandex.com"}
