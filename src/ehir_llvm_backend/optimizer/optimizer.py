@@ -1,7 +1,6 @@
 import llvmlite.binding as llvm
+from ehir.backend import OptProfile
 from llvmlite import ir
-
-from .level import OptLevel
 
 
 class Optimizer:
@@ -9,7 +8,7 @@ class Optimizer:
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
 
-    def run(self, module: ir.Module, opt_level: OptLevel) -> llvm.ModuleRef:
+    def run(self, module: ir.Module, opt_profile: OptProfile) -> llvm.ModuleRef:
         target = llvm.Target.from_default_triple()
         target_machine = target.create_target_machine()
 
@@ -17,18 +16,11 @@ class Optimizer:
 
         speed_level = 0
         size_level = 0
-        if opt_level == OptLevel.O0:
+        if opt_profile == OptProfile.debug:
             pass
-        elif opt_level == OptLevel.O1:
+        elif opt_profile == OptProfile.release:
             speed_level = 1
-        elif opt_level == OptLevel.O2:
-            speed_level = 2
-        elif opt_level == OptLevel.O3:
-            speed_level = 3
-        elif opt_level == OptLevel.Os:
-            speed_level = 2
-            size_level = 1
-        elif opt_level == OptLevel.Oz:
+        elif opt_profile == OptProfile.extreme:
             speed_level = 2
             size_level = 2
 

@@ -1,14 +1,15 @@
 from pathlib import Path
 
+from ehir.backend import EHIR_Backend, OptProfile
 from ehir.postprocessor import ProcessedModule
 
 from ehir_llvm_backend.assembler import Assembler
 from ehir_llvm_backend.codegen import Codegen
 from ehir_llvm_backend.linker import Linker
-from ehir_llvm_backend.optimizer import Optimizer, OptLevel
+from ehir_llvm_backend.optimizer import Optimizer
 
 
-class EHIR_LLVM_Backend:
+class EHIR_LLVM_Backend(EHIR_Backend):
     def __init__(self):
         self._codegen = Codegen()
         self._optimizer = Optimizer()
@@ -20,7 +21,7 @@ class EHIR_LLVM_Backend:
         module: ProcessedModule,
         output_object_path: Path,
         output_file_path: Path,
-        opt_level: OptLevel = OptLevel.O1,
+        opt_level: OptProfile = OptProfile.debug,
     ) -> Path:
         llvm_ir_raw_module = self._codegen.run(module)
         llvm_ir_opt_module = self._optimizer.run(llvm_ir_raw_module, opt_level)

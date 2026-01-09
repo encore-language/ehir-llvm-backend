@@ -26,6 +26,7 @@ def main():
         input_file.parent / f"{input_file.stem}.o",
         input_file.parent / f"{input_file.stem}.out",
     )
+    print("Output file written in:")
     print(file_path)
 
 

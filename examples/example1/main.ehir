@@ -1,13 +1,31 @@
-struct MS {
-    field1: u16
+fn main() -> u8 {
+  $entry:
+    a = call default()
+    b = call sub_fields(a)
+    ret b
 }
 
-fn main() -> u16 {
+fn default() -> MyStruct* {
   $entry:
-    f1 = lcpos 0_u16
-    a = scsoh MS(f1)
-    br $res
-  $res:
-    zero = lcpos 0_u16
-    ret zero
+    f1_ptr = cpos 1_u8
+    f2_ptr = cpos 2_u8
+
+    f1 = load f1_ptr
+    f2 = load f2_ptr
+
+    struct_ptr = csoh MyStruct(f1, f2)
+    ret struct_ptr
+}
+
+fn sub_fields(struct_ptr: MyStruct*) -> u8 {
+  $entry:
+    field1 = getfield struct_ptr > field1
+    field2 = getfield struct_ptr > field2
+    res = sub field1, field2
+    ret res
+}
+
+struct MyStruct {
+    field1: u8
+    field2: u8
 }
