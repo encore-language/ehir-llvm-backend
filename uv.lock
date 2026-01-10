@@ -23,7 +23,7 @@ wheels = [
 [[package]]
 name = "ehir"
 version = "0.0.1"
-source = { git = "https://github.com/encore-language/ehir.git?branch=feature%2Fsafe_pointers#0de8f61996829d519fa7ffc41537eadad2970daa" }
+source = { git = "https://github.com/encore-language/ehir.git?branch=feature%2Fsafe_pointers#1f42c9a2962e3bf693ef6b0c547c4d611980d12f" }
 dependencies = [
     { name = "llvmlite" },
     { name = "rich" },
