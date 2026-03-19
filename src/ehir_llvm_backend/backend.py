@@ -23,7 +23,7 @@ class EHIR_LLVM_Backend(EHIR_Backend):
         module: ProcessedModule,
         output_object_path: Path,
         output_file_path: Path,
-        opt_level: OptProfile = OptProfile.debug,
+        opt_level: OptProfile = OptProfile.extreme,
     ) -> Path:
         llvm_ir_raw_module = self._codegen.run(module)
         llvm_ir_opt_module = self._optimizer.run(llvm_ir_raw_module, opt_level)

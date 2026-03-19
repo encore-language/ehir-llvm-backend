@@ -1,9 +1,13 @@
+from collections.abc import Sequence
+
 import llvmlite.binding as llvm
 import llvmlite.ir as ir
 from ehir.core.block import TerminatedBlock
 from ehir.core.derectives import Derective_fn, Derective_struct
 from ehir.core.derectives.base import Derective
 from ehir.core.instructions.base import Instruction
+from ehir.core.instructions.control_flow import Instruction_phi
+from ehir.core.instructions.control_flow.phi import PhiPair
 from ehir.core.instructions.control_flow.ret import Instruction_ret
 from ehir.core.instructions.control_flow.switch import Instruction_switch
 from ehir.core.instructions.memory import (
@@ -22,6 +26,12 @@ from ehir.core.instructions.operators.arithmetic import (
     Instruction_div,
     Instruction_mul,
     Instruction_sub,
+)
+from ehir.core.instructions.operators.comparison import (
+    Instruction_geq,
+    Instruction_grt,
+    Instruction_leq,
+    Instruction_les,
 )
 from ehir.core.instructions.operators.logic import Instruction_and, Instruction_ieq, Instruction_neq, Instruction_or
 from ehir.core.instructions.special import Instruction_comment
@@ -45,6 +55,8 @@ class Codegen:
         self.builder = ir.IRBuilder()
         self._variables: dict[str, object] = {}
         self._structs: dict[str, ir.LiteralStructType] = {}
+        self._blocks: dict[str, ir.Block] = {}
+        self._pending_phi_incomings: list[tuple[ir.PhiInstr, Sequence[PhiPair]]] = []
 
     def run(self, mod: ProcessedModule) -> ir.Module:
         for derective in mod.structs:
@@ -100,6 +112,8 @@ class Codegen:
         func = [f for f in self.module.functions if f.name == fn.name][0]
 
         self._variables.clear()
+        self._blocks.clear()
+        self._pending_phi_incomings.clear()
         for i, param in enumerate(func.args):
             param_name = fn.params[i].name
             self._variables[param_name] = param
@@ -110,11 +124,14 @@ class Codegen:
             assert isinstance(block, TerminatedBlock)
             ir_block = func.append_basic_block(block.name)
             ir_blocks.append(ir_block)
+            self._blocks[block.name] = ir_block
 
         for block, ir_block in zip(fn.get_body(), ir_blocks, strict=True):
             assert block.name == ir_block.name
             self.builder.position_at_end(ir_block)
             self._build_block(block)
+
+        self._resolve_pending_phi_incomings()
 
     def _build_block(self, block: TerminatedBlock):
         for instr in block.body:
@@ -144,6 +161,14 @@ class Codegen:
             self._build_ieq(instr)
         elif isinstance(instr, Instruction_neq):
             self._build_neq(instr)
+        elif isinstance(instr, Instruction_les):
+            self._build_les(instr)
+        elif isinstance(instr, Instruction_leq):
+            self._build_leq(instr)
+        elif isinstance(instr, Instruction_grt):
+            self._build_grt(instr)
+        elif isinstance(instr, Instruction_geq):
+            self._build_geq(instr)
         elif isinstance(instr, Instruction_mul):
             self._build_mul(instr)
         elif isinstance(instr, Instruction_div):
@@ -162,6 +187,8 @@ class Codegen:
             self._build_getfieldptr(instr)
         elif isinstance(instr, Instruction_getptr):
             self._build_getptr(instr)
+        elif isinstance(instr, Instruction_phi):
+            self._build_phi(instr)
         elif isinstance(instr, Instruction_comment):
             pass  # skip comment
         else:
@@ -239,10 +266,7 @@ class Codegen:
             self.builder.store(base, temp)
             base = temp
 
-        indices = [ir.Constant(ir.IntType(32), 0)]
-        for idx_var in instr.indexes:
-            indices.append(ir.Constant(ir.IntType(32), int(idx_var.name)))
-
+        indices = [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), int(instr.field.name))]
         result = self.builder.gep(base, indices, name=instr.var_out.name)
         self._variables[instr.var_out.name] = result
         return result
@@ -367,6 +391,42 @@ class Codegen:
         self._variables[instr.var_out.name] = result
         return result
 
+    def _build_les(self, instr: Instruction_les):
+        self.builder.comment("")
+        self.builder.comment(f"{instr}")
+        left = self._variables[instr.lhs.name]
+        right = self._variables[instr.rhs.name]
+        result = self.builder.icmp_signed("<", left, right, name=instr.var_out.name)
+        self._variables[instr.var_out.name] = result
+        return result
+
+    def _build_leq(self, instr: Instruction_leq):
+        self.builder.comment("")
+        self.builder.comment(f"{instr}")
+        left = self._variables[instr.lhs.name]
+        right = self._variables[instr.rhs.name]
+        result = self.builder.icmp_signed("<=", left, right, name=instr.var_out.name)
+        self._variables[instr.var_out.name] = result
+        return result
+
+    def _build_grt(self, instr: Instruction_grt):
+        self.builder.comment("")
+        self.builder.comment(f"{instr}")
+        left = self._variables[instr.lhs.name]
+        right = self._variables[instr.rhs.name]
+        result = self.builder.icmp_signed(">", left, right, name=instr.var_out.name)
+        self._variables[instr.var_out.name] = result
+        return result
+
+    def _build_geq(self, instr: Instruction_geq):
+        self.builder.comment("")
+        self.builder.comment(f"{instr}")
+        left = self._variables[instr.lhs.name]
+        right = self._variables[instr.rhs.name]
+        result = self.builder.icmp_signed(">=", left, right, name=instr.var_out.name)
+        self._variables[instr.var_out.name] = result
+        return result
+
     def _build_call(self, instr: Instruction_call):
         self.builder.comment("")
         self.builder.comment(f"{instr}")
@@ -398,6 +458,23 @@ class Codegen:
         self.builder.comment(f"{instr}")
         value = self._variables[instr.var.name]
         self.builder.ret(value)
+
+    def _build_phi(self, instr: Instruction_phi):
+        self.builder.comment("")
+        self.builder.comment(f"{instr}")
+
+        assert instr.var_out.type
+        phi = self.builder.phi(typ=self._build_type(instr.var_out.type), name=instr.var_out.name)
+        self._variables[instr.var_out.name] = phi
+        self._pending_phi_incomings.append((phi, instr.args))
+        return phi
+
+    def _resolve_pending_phi_incomings(self):
+        for phi, args in self._pending_phi_incomings:
+            for arg in args:
+                block = self._blocks[arg.block_label]
+                value = self._variables[arg.var.name]
+                phi.add_incoming(value=value, block=block)
 
     def _build_type(self, type: Type) -> ir.Type:
         if isinstance(type, Pointer):
