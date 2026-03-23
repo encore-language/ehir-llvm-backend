@@ -6,7 +6,8 @@ from ehir.core.block import TerminatedBlock
 from ehir.core.derectives import Derective_fn, Derective_struct
 from ehir.core.derectives.base import Derective
 from ehir.core.instructions.base import Instruction
-from ehir.core.instructions.control_flow import Instruction_call, Instruction_ret, Instruction_switch
+from ehir.core.instructions.control_flow import Instruction_call, Instruction_phi, Instruction_ret, Instruction_switch
+from ehir.core.instructions.control_flow.phi import PhiPair
 from ehir.core.instructions.memory import (
     Instruction_getfieldptr,
     Instruction_getptr,
