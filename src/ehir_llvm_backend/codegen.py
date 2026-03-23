@@ -6,10 +6,7 @@ from ehir.core.block import TerminatedBlock
 from ehir.core.derectives import Derective_fn, Derective_struct
 from ehir.core.derectives.base import Derective
 from ehir.core.instructions.base import Instruction
-from ehir.core.instructions.control_flow import Instruction_phi
-from ehir.core.instructions.control_flow.phi import PhiPair
-from ehir.core.instructions.control_flow.ret import Instruction_ret
-from ehir.core.instructions.control_flow.switch import Instruction_switch
+from ehir.core.instructions.control_flow import Instruction_call, Instruction_ret, Instruction_switch
 from ehir.core.instructions.memory import (
     Instruction_getfieldptr,
     Instruction_getptr,
@@ -35,7 +32,6 @@ from ehir.core.instructions.operators.comparison import (
 )
 from ehir.core.instructions.operators.logic import Instruction_and, Instruction_ieq, Instruction_neq, Instruction_or
 from ehir.core.instructions.special import Instruction_comment
-from ehir.core.instructions.special.call import Instruction_call
 from ehir.core.primitives import Usize, Usize_t
 from ehir.core.primitives.base import Primitive
 from ehir.core.type import Pointer, Type
@@ -267,6 +263,7 @@ class Codegen:
             base = temp
 
         indices = [ir.Constant(ir.IntType(32), 0), ir.Constant(ir.IntType(32), int(instr.field.name))]
+
         result = self.builder.gep(base, indices, name=instr.var_out.name)
         self._variables[instr.var_out.name] = result
         return result

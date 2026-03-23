@@ -1,0 +1,10 @@
+imp mymathlib::Vector2D
+imp mymathlib::vec::Vector3D
+
+fn main() -> u32 {
+$entry:
+  a: u32 = lcpos 40_u32
+  b: u32 = lcpos 2_u32
+  result: u32 = add a, b
+  ret result
+}
