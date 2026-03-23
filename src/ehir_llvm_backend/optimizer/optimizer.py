@@ -1,5 +1,5 @@
 import llvmlite.binding as llvm
-from ehir.backend import OptProfile
+from ehir.backend import EHIR_Backend
 from llvmlite import ir
 
 
@@ -8,7 +8,7 @@ class Optimizer:
         llvm.initialize_native_target()
         llvm.initialize_native_asmprinter()
 
-    def run(self, module: ir.Module, opt_profile: OptProfile) -> llvm.ModuleRef:
+    def run(self, module: ir.Module, opt_profile: EHIR_Backend.OptProfile) -> llvm.ModuleRef:
         target = llvm.Target.from_default_triple()
         target_machine = target.create_target_machine()
 
@@ -16,11 +16,11 @@ class Optimizer:
 
         speed_level = 0
         size_level = 0
-        if opt_profile == OptProfile.debug:
+        if opt_profile == EHIR_Backend.OptProfile.debug:
             pass
-        elif opt_profile == OptProfile.release:
+        elif opt_profile == EHIR_Backend.OptProfile.release:
             speed_level = 1
-        elif opt_profile == OptProfile.extreme:
+        elif opt_profile == EHIR_Backend.OptProfile.extreme:
             speed_level = 2
             size_level = 2
 

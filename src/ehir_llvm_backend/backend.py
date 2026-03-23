@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 from pathlib import Path
 
-from ehir.backend import EHIR_Backend, OptProfile
+from ehir.backend import EHIR_Backend
 from ehir.postprocessor import ProcessedModule
 
 from ehir_llvm_backend.assembler import Assembler
@@ -9,27 +10,28 @@ from ehir_llvm_backend.linker import Linker
 from ehir_llvm_backend.optimizer import Optimizer
 
 
+@dataclass
 class EHIR_LLVM_Backend(EHIR_Backend):
-    def __init__(self, output_llvm_ir_path: Path):
+    def __post_init__(self):
         self._codegen = Codegen()
         self._optimizer = Optimizer()
         self._assembler = Assembler()
         self._linker = Linker()
 
-        self._llvm_ir_path = output_llvm_ir_path
+        self._profile_path = self.target_dir / self.opt_profile
+        self._llvm_ir_path = self._profile_path / "llvm"
+        self._object_path = self._profile_path / "object"
 
-    def compile(
-        self,
-        module: ProcessedModule,
-        output_object_path: Path,
-        output_file_path: Path,
-        opt_level: OptProfile = OptProfile.extreme,
-    ) -> Path:
+        self._llvm_ir_path.mkdir(exist_ok=True, parents=True)
+        self._object_path.mkdir(exist_ok=True, parents=True)
+
+    def compile_module(self, module: ProcessedModule) -> Path:
         llvm_ir_raw_module = self._codegen.run(module)
-        llvm_ir_opt_module = self._optimizer.run(llvm_ir_raw_module, opt_level)
+        llvm_ir_opt_module = self._optimizer.run(llvm_ir_raw_module, self.opt_profile)
 
-        with (self._llvm_ir_path / f"{module.name}.ir").open("w") as f:
+        mod_name = Path(module.id).stem
+        with (self._llvm_ir_path / f"{mod_name}.ir").open("w") as f:
             f.write(str(llvm_ir_opt_module))
 
-        obj_path = self._assembler.run(llvm_ir_opt_module, output_object_path)
-        return self._linker.run(obj_path, output_file_path)
+        object_path = self._assembler.run(llvm_ir_opt_module, self._object_path / f"{mod_name}.o")
+        return Linker().run(object_path, self._profile_path / mod_name)
