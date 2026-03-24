@@ -25,13 +25,12 @@ class EHIR_LLVM_Backend(EHIR_Backend):
         self._llvm_ir_path.mkdir(exist_ok=True, parents=True)
         self._object_path.mkdir(exist_ok=True, parents=True)
 
-    def compile_module(self, module: ProcessedModule) -> Path:
+    def compile_module(self, module: ProcessedModule, name: str) -> Path:
         llvm_ir_raw_module = self._codegen.run(module)
         llvm_ir_opt_module = self._optimizer.run(llvm_ir_raw_module, self.opt_profile)
 
-        mod_name = Path(module.id).stem
-        with (self._llvm_ir_path / f"{mod_name}.ir").open("w") as f:
+        with (self._llvm_ir_path / f"{name}.ir").open("w") as f:
             f.write(str(llvm_ir_opt_module))
 
-        object_path = self._assembler.run(llvm_ir_opt_module, self._object_path / f"{mod_name}.o")
-        return Linker().run(object_path, self._profile_path / mod_name)
+        object_path = self._assembler.run(llvm_ir_opt_module, self._object_path / f"{name}.o")
+        return Linker().run(object_path, self._profile_path / name)

@@ -23,7 +23,7 @@ wheels = [
 [[package]]
 name = "ehir"
 version = "0.0.1"
-source = { git = "https://github.com/encore-language/ehir.git?branch=trunk#ca1ad57f1b15bc56744a70230d71aeb5d921872a" }
+source = { git = "https://github.com/encore-language/ehir.git?branch=trunk#e48d0e0b5a505ae5f3498004931e75a8db8ecd3e" }
 dependencies = [
     { name = "llvmlite" },
     { name = "rich" },
