@@ -28,9 +28,9 @@ def main():
         backend=EHIR_LLVM_Backend(target_dir=cwd / "target", opt_profile=opt_profile),
     )
     for refrain in (cwd / "refrains").iterdir():
-        compiler.add_refrain_to_build(Refrain(name=refrain.name, path=refrain, type=Refrain.TargetType.LIBRARY))
+        compiler.add_refrain_to_build(Refrain(name=refrain.name, path=refrain, type=Refrain.TargetType.STATIC_LIB))
 
-    compiler.add_refrain_to_build(Refrain(name=cwd.name, path=cwd, type=Refrain.TargetType.BINARY))
+    compiler.add_refrain_to_build(Refrain(name=cwd.name, path=cwd, type=Refrain.TargetType.EXECUTABLE))
     compiler.compile_all()
 
 
