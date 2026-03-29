@@ -35,7 +35,7 @@ from ehir.core.instructions.operators.logic import Instruction_and, Instruction_
 from ehir.core.instructions.special import Instruction_comment
 from ehir.core.primitives import Usize, Usize_t
 from ehir.core.primitives.base import Primitive
-from ehir.core.type import Pointer, Type
+from ehir.core.type import HeapSmartPointer, Pointer, StackSmartPointer, Type
 from ehir.postprocessor import ProcessedModule
 
 
@@ -48,14 +48,19 @@ class Codegen:
         llvm.initialize_native_asmprinter()
         llvm.initialize_native_asmparser()
 
+        self._reset_state()
+
+    def _reset_state(self):
         self.module = ir.Module()
         self.builder = ir.IRBuilder()
         self._variables: dict[str, object] = {}
-        self._structs: dict[str, ir.LiteralStructType] = {}
+        self._structs: dict[str, ir.BaseStructType] = {}
         self._blocks: dict[str, ir.Block] = {}
         self._pending_phi_incomings: list[tuple[ir.PhiInstr, Sequence[PhiPair]]] = []
 
     def run(self, mod: ProcessedModule) -> ir.Module:
+        self._reset_state()
+
         for derective in mod.structs:
             self._codegen_struct_decl(derective)
 
@@ -65,19 +70,15 @@ class Codegen:
         for derective in mod.funcs:
             self._codegen_fn_decl(derective)
 
-        try:
-            for derective in mod.funcs:
-                self._codegen_fn_body(derective)
-        except Exception as e:
-            print(self.module)
-            raise e
+        for derective in mod.funcs:
+            self._codegen_fn_body(derective)
 
         return self.module
 
     def _codegen_struct_decl(self, struct: Derective_struct):
-        st = ir.LiteralStructType([])
         if struct.name in self._structs:
             raise ValueError(f"Struct '{struct.name}' already declared")
+        st = self.module.context.get_identified_type(struct.name)
         self._structs[struct.name] = st
 
     def _codegen_fn_decl(self, fn: Derective_fn):
@@ -103,7 +104,17 @@ class Codegen:
     def _codegen_struct_body(self, struct: Derective_struct):
         struct_type = self._structs[struct.name]
         field_types = [self._build_type(param.type) for param in struct.params]
-        struct_type.elements = field_types
+        if isinstance(struct_type, ir.IdentifiedStructType):
+            if struct_type.is_opaque:
+                struct_type.set_body(*field_types)
+            else:
+                current = tuple(struct_type.elements)  # ty:ignore[invalid-argument-type]
+                target = tuple(field_types)
+                if current != target:
+                    raise ValueError(f"Struct '{struct.name}' body already defined with a different layout")
+            return
+
+        struct_type.elements = field_types  # ty:ignore[invalid-assignment]
 
     def _codegen_fn_body(self, fn: Derective_fn):
         func = [f for f in self.module.functions if f.name == fn.name][0]
@@ -475,6 +486,12 @@ class Codegen:
                 phi.add_incoming(value=value, block=block)
 
     def _build_type(self, type: Type) -> ir.Type:
+        if isinstance(type, (HeapSmartPointer, StackSmartPointer)):
+            wrapper_name = type.get_name()
+            if wrapper_name not in self._structs:
+                raise ValueError(f"Smart pointer wrapper struct '{wrapper_name}' not found")
+            return self._structs[wrapper_name]
+
         if isinstance(type, Pointer):
             return ir.PointerType(self._build_type(type.pointee))
 

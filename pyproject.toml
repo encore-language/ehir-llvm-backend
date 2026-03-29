@@ -21,7 +21,7 @@ dev = [
 ]
 
 [tool.uv.sources]
-ehir = { git = "https://github.com/encore-language/ehir.git", branch = "trunk" }
+ehir = { git = "https://github.com/encore-language/ehir.git", branch = "feature/modify_builder" }
 
 [project.scripts]
 ehir-llvm-backend-cli = "ehir_llvm_backend.cli:main"
