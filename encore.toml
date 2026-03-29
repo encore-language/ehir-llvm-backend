@@ -1,0 +1,8 @@
+[project]
+name = "ehir-llvm-backend"
+target = "auto"
+version = "0.0.0"
+description = "EHIR LLVM Backend"
+readme = "README.md"
+licence = "MIT"
+dependencies = []
