@@ -23,7 +23,7 @@ wheels = [
 [[package]]
 name = "ehir"
 version = "0.0.1"
-source = { git = "https://github.com/encore-language/ehir.git?branch=feature%2Fmodify_builder#1b8284efb7695141556c2ffc777a2b92a04a4213" }
+source = { git = "https://github.com/encore-language/ehir.git?branch=trunk#e58c28d55e4465485f2f0354fe0b8ccae846abb2" }
 dependencies = [
     { name = "llvmlite" },
     { name = "rich" },
@@ -47,7 +47,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "ehir", git = "https://github.com/encore-language/ehir.git?branch=feature%2Fmodify_builder" },
+    { name = "ehir", git = "https://github.com/encore-language/ehir.git?branch=trunk" },
     { name = "llvmlite", specifier = ">=0.46.0" },
 ]
 
